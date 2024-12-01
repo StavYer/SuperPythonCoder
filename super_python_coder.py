@@ -27,4 +27,10 @@ completion = client.chat.completions.create(
 
 # Extract respone from gpt-4o-mini.
 response = completion.choices[0].message.content
-print(response)
+
+# Save response to a file.
+
+with open("generatedCode.py", "w") as file:
+    file.write(response)
+
+    
