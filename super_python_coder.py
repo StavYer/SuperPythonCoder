@@ -1,5 +1,6 @@
 """Module for interfacing with the OpenAI API."""
 import os
+import subprocess
 from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
@@ -33,4 +34,12 @@ response = completion.choices[0].message.content
 with open("generatedCode.py", "w") as file:
     file.write(response)
 
-    
+
+# Run the generated code.
+
+run_result = subprocess.run(["python", "generatedCode.py"], capture_output=True, text=True, input="7")
+
+print("Output: ", run_result.stdout)
+
+print("Error: ", run_result.stderr)
+
