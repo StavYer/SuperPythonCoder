@@ -18,10 +18,15 @@ completion = client.chat.completions.create(
                      'system': 'print('hello world')'. \
                         You can add python comments when appropriate,\
                              however, do not include title such as '''python''' in beggining of the answer.\
-                                just include raw python code and comments."},
+                                just include raw python code and comments - if you want to make examples \
+                                    make them in comment."},
         # First user request.
         {"role": "user", "content": "Create a python program that checks if a number is prime. \
-             Do not write any explanations, just show me the code itself."}
+             Do not write any explanations, just show me the code itself. Also, please include \
+                 running unit tests with asserts that check the logic of the \
+                    program. Make sure to also check interesting edge cases. There should be at least \
+                        10 different unit tests. Also, add a prograss bar to the assertion tests \
+                            and indicate if any failed or all passed."}
     ]
 
 )
@@ -37,7 +42,7 @@ with open("generatedCode.py", "w") as file:
 
 # Run the generated code.
 
-run_result = subprocess.run(["python", "generatedCode.py"], capture_output=True, text=True, input="7")
+run_result = subprocess.run(["python", "generatedCode.py"], capture_output=True, text=True)
 
 print("Output: ", run_result.stdout)
 
