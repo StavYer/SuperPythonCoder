@@ -160,7 +160,9 @@ def main():
         else:
             print(f"Attempt {attempt} run into an error running generated code! Error:{error}. Trying again")
             program_request += (f" this is the code {generated_code}. I encountered "
-                f"the following error: {error}. Please fix the code.")
+                f"the following error: {error}. IMPORTANT - Please fix the code if there is any exception regarding the code,"
+                 "or check the tests if there is an assertion error"
+                 " to see if the test is correct and the code is at fault (so you need to fix the code), or the test is at fault (so you need to fix the test).")
     if error is not None:
         print("FINAL - Code generation failed.")
         sys.exit(1)
