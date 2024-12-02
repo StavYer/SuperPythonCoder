@@ -170,7 +170,7 @@ def main():
             print(f" Attempt {attempt} run into an error running generated code! Error:{error}. Trying again")
             program_request += (f" this is the code {generated_code}. I encountered "
                 f"the following error: {error}. Fix the error.")
-            messages[0]["content"] = initial_req_template.format(program_request=program_request)   # update the user request to contain the error message.  
+            messages[1]["content"] = initial_req_template.format(program_request=program_request)   # update the user request to contain the error message.  
     if error is not None:
         print("FINAL - Code generation failed.")
         sys.exit(1)
