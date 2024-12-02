@@ -161,15 +161,16 @@ def main():
             print("Code generation failed. trying again.")
             continue
         save_code_to_file(generated_code)
-        time, error = run_generated_code()
+        unoptimized_time, error = run_generated_code()
 
         if error is None:
             break
 
         else:
-            print(f" Attempt {attempt} run into an error running generated code! Error:{error}. Trying again")
+            print(f" Attempt {attempt} run into an error running generated code! Error:{error} Trying again")
             program_request += (f" this is the code {generated_code}. I encountered "
-                f"the following error: {error}. Fix the error.")
+                f"the following error: {error}. Taking the error log into account, Fix what's caused the error. For example, if a test returns"
+                " an assertion error, check that the test is correct and that the code is correct. If the code is correct, fix the test. If the code is incorrect, fix the code.")
             messages[1]["content"] = initial_req_template.format(program_request=program_request)   # update the user request to contain the error message.  
     if error is not None:
         print("FINAL - Code generation failed.")
@@ -188,6 +189,33 @@ def main():
                         " in beginning of the answer, nor triple quotes at the end."
                         "Do not include a so called example function, unnecessary imports, or anything that is not the direct, raw answer to the request."
                         "VERY IMPORTANT - when optimizing code, ensure the functionality remains the same while improving performance and keep the same unit tests.")
+    
+    new_user_request = (f"I have the following code: {generated_code} "
+            "It is composed of some hard code and unit tests.\n DO NOT CHANGE THE UNIT TESTS.\n" 
+                 " I need you to optimize the code to RUN FASTER. IMPORTANT - the code must retain the same functionality as the original code. " 
+                            " Add comments for important actions and computations.")
+
+    messages[0]["content"] = new_instruction
+    messages[1]["content"] = new_user_request
+
+    optimized_code = generate_code(messages)
+
+    save_code_to_file(optimized_code, "optimizedCode.py")
+    optimized_time, error = run_generated_code(i_file_path="optimizedCode.py")
+
+    if error is not None:
+        print("couldn't generate optimized code.")
+        optimized_code = generated_code
+
+    print("Original code run time: ", unoptimized_time)
+    print("Optimized code run time: ", optimized_time)
+
+    if optimized_time > unoptimized_time:
+        print("Optimized code is slower than the original code. Keeping the original code.")
+        optimized_code = generated_code
+    
+    else:
+        print("Optimized code is faster than the original code. Keeping the optimized code.")
     
 
 if __name__ == "__main__":
