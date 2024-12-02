@@ -2,6 +2,8 @@
 import os
 import random
 import subprocess
+import time
+import sys
 from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
@@ -130,16 +132,18 @@ def save_code_to_file(i_generated_code, i_file_path="generatedCode.py"):
     with open(i_file_path, "w") as file:
         file.write(i_generated_code)
 
-# Try to run the generated code, and return any errors.
+# Try to run the generated code, time it and return any errors.
 def run_generated_code(i_file_path="generatedCode.py"):
     try:
+        start_time = time.perf_counter()
         run_result = subprocess.run(["python", i_file_path], capture_output=True, text=True, check=True)
         print("Output: ", run_result.stdout)
         print("Code creation completed successfully!")
         os.startfile(i_file_path)
     except subprocess.CalledProcessError as e:
-        return e.stderr
-    return None
+        return None, e.stderr
+    end_time = time.perf_counter()
+    return end_time - start_time, None
 
 
 def main():
@@ -150,7 +154,7 @@ def main():
             print("Code generation failed. trying again.")
             continue
         save_code_to_file(generated_code)
-        error = run_generated_code()
+        time, error = run_generated_code()
         if error is None:
             break
         else:
@@ -159,6 +163,7 @@ def main():
                 f"the following error: {error}. Please fix the code.")
     if error is not None:
         print("FINAL - Code generation failed.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
