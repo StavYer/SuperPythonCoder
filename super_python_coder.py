@@ -91,18 +91,11 @@ def get_program_request():
 
     return choice
 
-def generate_code(i_user_request, i_instruction):
-    user_request = i_user_request
-    instruction = i_instruction
+def generate_code(i_messages):
 
     completion = client.chat.completions.create(
     model="gpt-4o-mini",
-    messages=[
-        # Setting initial instruction.
-        {"role": "system", "content": instruction },
-        # First user request.
-        {"role": "user", "content": user_request}
-    ]
+    messages = i_messages
 
     )
     respone = completion.choices[0].message.content
@@ -131,16 +124,16 @@ def run_generated_code(i_file_path="generatedCode.py"):
 
 
 def main():
-    program_request = get_program_request()
+    program_request = get_program_request()   # get the program request from the user.
 
-    initial_req_template = user_request = ("Create a python program that adheres to the following: {program_request}. "
+    initial_req_template = ("Create a python program that adheres to the following: {program_request}. "
             "Do not write any explanations, just show me the code itself.\n Also, please include" 
                  " running unit tests with asserts that check the logic of the" 
                     "program. Make sure to also check interesting edge cases. Important - There should be at least\n" 
                         "10 different unit tests. Important - please add a prograss bar to the assertion tests" 
                             " and indicate if any failed or all passed. Add comments for important actions and computations.")
 
-    initial_user_request = initial_req_template.format(program_request=program_request)
+    initial_user_request = initial_req_template.format(program_request=program_request)   # The user prompt.
 
     initial_instruction = ("You are a python program writer that adheres to the requests he gets."
             " Output only RAW CODE in response to a request. Good Example:\n"
@@ -156,8 +149,10 @@ def main():
                         "Do not include a so called example function, unnecessary imports, or anything that is not the direct, raw answer to the request."
                         "VERY IMPORTANT - when including unit tests, use the assert keyword in each test so the user can know by exception when a test fails.")
 
+    messages = [{"role": "system", "content": initial_instruction}, {"role": "user", "content": initial_user_request}]   # Instructions for the model.
+
     for attempt in range(5):
-        generated_code = generate_code(initial_user_request, initial_instruction)
+        generated_code = generate_code(messages)
 
         if generated_code == "":
             print("Code generation failed. trying again.")
@@ -173,11 +168,12 @@ def main():
             program_request += (f" this is the code {generated_code}. I encountered "
                 f"the following error: {error}. IMPORTANT - Please fix the code if there is any exception regarding the code,"
                  "or check the tests if there is an assertion error and act accordingly.")
-            initial_user_request = initial_req_template.format(program_request=program_request)   # update the user request to contain the error message.  
+            messages[0]["content"] = initial_req_template.format(program_request=program_request)   # update the user request to contain the error message.  
     if error is not None:
         print("FINAL - Code generation failed.")
         sys.exit(1)
     
+
     
 
 if __name__ == "__main__":
