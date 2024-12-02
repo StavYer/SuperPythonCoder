@@ -95,7 +95,8 @@ def generate_code(i_messages):
 
     completion = client.chat.completions.create(
     model="gpt-4o-mini",
-    messages = i_messages
+    messages = i_messages,
+    temperature=0.8
 
     )
     respone = completion.choices[0].message.content
@@ -135,16 +136,18 @@ def main():
 
     initial_user_request = initial_req_template.format(program_request=program_request)   # The user prompt.
 
-    initial_instruction = ("You are a python program writer that adheres to the requests he gets."
-            " Output only RAW CODE in response to a request. Good Example:\n"
+    initial_instruction = ("You are a python program writer that adheres to the requests he gets, and outputs only RAW python code."
+            " Output only RAW PYTHON CODE in response to a request. GOOD EXAMPLE:\n"
                 "'user': 'create a program that prints hello world'\n" 
-                "'system': 'print('hello world')'\n"
-                "Bad Examples:\n"
+                "'system': 'print('hello world')',\n"
+                "BAD EXAMPLES:\n"
                 "'user': 'I want binary search'\n" 
-                "'system': '#Example function, x * x'\n"
+                "'system': '#Example function, x * x',\n"
+                "'user': 'create a program that prints hello world'\n" 
+                "VERY BAD - 'system': ' '''python print('hello world') ''','\n"
                 "'user': 'I want at least 10 tests'\n" 
-                "'system': * creates 7 tests * \n"
-                    "You can add python comments when appropriate however, do not include title such as '''python'''"
+                "'system': * creates 7 tests *,\n"
+                    "IMPORTANT - You can add python comments when appropriate however, do not include title such as '''python'''"
                         " in beggining of the answer, nor triple quotes at the end."
                         "Do not include a so called example function, unnecessary imports, or anything that is not the direct, raw answer to the request."
                         "VERY IMPORTANT - when including unit tests, use the assert keyword in each test so the user can know by exception when a test fails.")
@@ -166,17 +169,26 @@ def main():
         else:
             print(f" Attempt {attempt} run into an error running generated code! Error:{error}. Trying again")
             program_request += (f" this is the code {generated_code}. I encountered "
-                f"the following error: {error}. IMPORTANT - Please fix the code if there is any exception regarding the code,"
-                 "or check the tests if there is an assertion error and act accordingly.")
+                f"the following error: {error}. Fix the error.")
             messages[0]["content"] = initial_req_template.format(program_request=program_request)   # update the user request to contain the error message.  
     if error is not None:
         print("FINAL - Code generation failed.")
         sys.exit(1)
     
-
+    new_instruction = ("You are a python program optimizer that receives code and needs to optimize it."
+            " Output only RAW CODE in response to a request. Good Example:\n"
+                "'user': * code that does something*\n" 
+                "'system': * code that does the same thing, but faster, while keeping any original tests*\n"
+                "Bad Examples:\n"
+                "'user': *code that needs optimization, and unit tests for this code*\n" 
+                "'system': *code that doesn't retain the same functionality as the given code*\n"
+                "'user': *code that needs optimization, and unit tests for this code*\n" 
+                "'system': * creates new tests, deletes old ones * \n"
+                    "You can add python comments when appropriate however, do not include title such as '''python'''"
+                        " in beginning of the answer, nor triple quotes at the end."
+                        "Do not include a so called example function, unnecessary imports, or anything that is not the direct, raw answer to the request."
+                        "VERY IMPORTANT - when optimizing code, ensure the functionality remains the same while improving performance and keep the same unit tests.")
     
 
 if __name__ == "__main__":
     main()
-
-
