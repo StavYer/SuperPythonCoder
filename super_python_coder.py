@@ -6,7 +6,7 @@ import time
 import sys
 from openai import OpenAI
 from dotenv import load_dotenv
-from colorama import init, Fore
+from colorama import init, Fore, Style
 from tqdm import tqdm
 
 load_dotenv()
@@ -85,12 +85,12 @@ PROGRAMS_LIST = [
 ]
 
 def get_program_request():
-    choice = input(("Im Super Python Coder. Tell me, which program would you like me to code for you?\n"
+    choice = input((Fore.CYAN + "I'm Super Python Coder. Tell me, which program would you like me to code for you?\n"
          "If you don't have an idea, just press enter and"
-          " I will choose a random program to code:"))
+         " I will choose a random program to code:" + Fore.RESET))
     if choice.strip() == "":
         choice = random.choice(PROGRAMS_LIST)
-        print(f"Okay! I chose: {choice}")
+        print(Fore.GREEN + f"Okay! I chose: {choice}" + Fore.RESET)
 
     return choice
 
@@ -117,8 +117,8 @@ def run_generated_code(i_file_path="generatedCode.py"):
     try:
         start_time = time.perf_counter()
         run_result = subprocess.run(["python", i_file_path], capture_output=True, text=True, check=True)
-        print("Output: ", run_result.stdout)
-        print("Code creation completed successfully!")
+        print(Fore.LIGHTBLUE_EX + f"Output: {run_result.stdout} " + Fore.RESET)
+        print(Fore.GREEN + "Code creation completed successfully!" + Fore.RESET)
         os.startfile(i_file_path)
     except subprocess.CalledProcessError as e:
         return None, e.stderr
@@ -136,14 +136,13 @@ def lint_check(i_file_path="optimizedCode.py"):
 def main():
     program_request = get_program_request()   # get the program request from the user.
 
-    initial_req_template = ("Create a python program that adheres to the following: {program_request}. "
+    initial_user_request = (f"Create a python program that adheres to the following: {program_request}. "
             "Do not write any explanations, just show me the code itself.\n Also, please include" 
                  " running unit tests with asserts that check the logic of the" 
                     "program. Make sure to also check interesting edge cases. Important - There should be at least\n" 
                         "10 different unit tests. Important - please add a prograss bar to the assertion tests" 
                             " and indicate if any failed or all passed. Add comments for important actions and computations.")
 
-    initial_user_request = initial_req_template.format(program_request=program_request)   # The user prompt.
 
     initial_instruction = ("You are a python program writer that adheres to the requests he gets, and outputs only raw python code."
             " Output only raw code in response to a request. GOOD EXAMPLE:\n"
@@ -168,7 +167,7 @@ def main():
         messages.append({"role": "assistant", "content": generated_code})
 
         if generated_code == "":
-            print("Code generation failed. trying again.")
+            print(Fore.RED + "Code generation failed. trying again." + Fore.RESET)
             continue
         save_code_to_file(generated_code)
         unoptimized_time, error = run_generated_code()
@@ -177,14 +176,14 @@ def main():
             break
 
         else:
-            print(f" Attempt {attempt} run into an error running generated code! Error:{error} Trying again")
+            print(Fore.RED + f"Attempt number {attempt} ran into an error running the generated code! Error: {error} Trying again" + Fore.RESET)
             program_request = ("I encountered "
                 f"the following error running the code: {error}. Taking the error log into account, change the code or tests accordingly. Remember to output only raw code."
                 " If you get an assertion error, check the tests and code for faults and try to fix them.")
             messages.append({"role": "user", "content": program_request})   # update the user request to contain the error message.  
     if error is not None:
-        print("FINAL - Code generation failed.")
-        sys.exit(1)
+        print(FORE.RED + "FINAL - Code generation failed." + Fore.RESET)
+        sys.exit(0)
     
     new_instruction = ("You are a python program optimizer that receives code and needs to optimize it."
             " Output only RAW CODE in response to a request. Good Example:\n"
@@ -214,16 +213,16 @@ def main():
     save_code_to_file(optimized_code, "optimizedCode.py")
     optimized_time, error = run_generated_code(i_file_path="optimizedCode.py")
 
-    print("Original code run time: ", unoptimized_time)
-    print("Optimized code run time: ", optimized_time)
+    print(Fore.BLUE + f"Original code run time: {unoptimized_time}" + Fore.RESET)
+    print(Fore.BLUE + f"Optimized code run time: {optimized_time}" + Fore.RESET)
 
     if optimized_time is None or error is not None or optimized_time > unoptimized_time:
-        print("Optimized code is slower than the original code. Keeping the original code.")
+        print(Fore.BLUE + "Optimized code is slower than the original code. Keeping the original code." + Fore.RESET)
         messages[-1]["content"] = generated_code
         optimized_code = generated_code
     
     else:
-        print("Optimized code is faster than the original code. Keeping the optimized code.")
+        print(Fore.BLUE + "Optimized code is faster than the original code. Keeping the optimized code." + Fore.RESET)
     
     save_code_to_file(optimized_code, "optimizedCode.py")
 
@@ -246,7 +245,7 @@ def main():
             lint_attempt += 1
 
     if lint_attempt == max_lint_attempts and has_lint_errors:
-        print(Fore.RED + "There are still lint errors/warnings.")
+        print(Fore.RED + "There are still lint errors/warnings." + Fore.RESET)
 
 
 if __name__ == "__main__":
