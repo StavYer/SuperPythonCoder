@@ -136,7 +136,7 @@ def lint_check(i_file_path="optimizedCode.py"):
 def main():
     program_request = get_program_request()   # get the program request from the user.
 
-    initial_user_request = (f"Create a python program that adheres to the following: {program_request}. "
+    initial_user_request = (f"Create a python program that adheres to the following: {program_request}\n. Output only raw code that can run directly in a file.\n"
             "Do not write any explanations, just show me the code itself.\n Also, please include" 
                  " running unit tests with asserts that check the logic of the" 
                     "program. Make sure to also check interesting edge cases. Important - There should be at least\n" 
@@ -145,7 +145,7 @@ def main():
 
 
     initial_instruction = ("You are a python program writer that adheres to the requests he gets, and outputs only raw python code."
-            " Output only raw code in response to a request. GOOD EXAMPLE:\n"
+            " Output only raw code that can run directly in a file in response to a request. GOOD EXAMPLE:\n"
                 "'user': 'create a program that prints hello world'\n" 
                 "'system': 'print('hello world')',\n"
                 "BAD EXAMPLES:\n"
@@ -179,14 +179,14 @@ def main():
             print(Fore.RED + f"Attempt number {attempt} ran into an error running the generated code! Error: {error} Trying again" + Fore.RESET)
             program_request = ("I encountered "
                 f"the following error running the code: {error}. Taking the error log into account, change the code or tests accordingly. Remember to output only raw code."
-                " If you get an assertion error, check the tests and code for faults and try to fix them.")
+                " If you get an assertion error, check the tests and code for faults and try to fix them. Important - if only a single test fails, check that test.")
             messages.append({"role": "user", "content": program_request})   # update the user request to contain the error message.  
     if error is not None:
-        print(FORE.RED + "FINAL - Code generation failed." + Fore.RESET)
+        print(Fore.RED + "FINAL - Code generation failed." + Fore.RESET)
         sys.exit(0)
     
     new_instruction = ("You are a python program optimizer that receives code and needs to optimize it."
-            " Output only RAW CODE in response to a request. Good Example:\n"
+            " Output only RAW CODE that can directly run in a file in response to a request. Good Example:\n"
                 "'user': * code that does something*\n" 
                 "'system': * code that does the same thing, but faster, while keeping any original tests*\n"
                 "Bad Examples:\n"
